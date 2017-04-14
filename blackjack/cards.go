@@ -43,10 +43,10 @@ func NewCard(num int, suit string) *Card {
 	} else {
 		dispnum = strconv.Itoa(num)
 	}
-	card.dispnum = sf.NewText(dispnum, fonts["cards.ttf"], 24)
+	card.dispnum = sf.NewText(dispnum, res.fonts["cards.ttf"], 24)
 	card.dispnum.SetColor(sf.ColorBlack)
 	card.suit = suit
-	card.dispsuit = sf.NewSprite(textures[suit+".png"])
+	card.dispsuit = sf.NewSprite(res.images[suit+".png"])
 	card.dispsuit.SetOrigin(sf.Vector2f{16, 16})
 	card.SetPosDeck()
 	card.move = false

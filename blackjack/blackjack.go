@@ -1,11 +1,11 @@
 package main
 
 import (
-	"console"
 	"runtime"
 	"strconv"
 	"time"
 
+	console "github.com/pinejh/console"
 	sf "github.com/zyedidia/sfml/v2.3/sfml"
 )
 
@@ -14,8 +14,7 @@ const (
 	screenHeight = 600
 )
 
-var textures map[string]*sf.Texture
-var fonts map[string]*sf.Font
+var res *Resources
 
 var cardSlot map[string]sf.Vector2f
 
@@ -25,29 +24,19 @@ var c *Deck
 
 var turn int
 
-func loadTexture(filename string) {
-	texture := sf.NewTexture("./res/images/" + filename)
-	textures[filename] = texture
-}
+var gamemode int
 
-func loadFont(filename string) {
-	font := sf.NewFont("./res/fonts/" + filename)
-	fonts[filename] = font
-}
+var NewGame func()
+var DrawCard func()
+var PlayerStay func()
+var StartGame func()
+var ExitGame func()
+var endGame func()
 
 func main() {
 	runtime.LockOSThread()
 
-	textures = make(map[string]*sf.Texture)
-
-	loadTexture("spades.png")
-	loadTexture("clubs.png")
-	loadTexture("diamonds.png")
-	loadTexture("hearts.png")
-
-	fonts = make(map[string]*sf.Font)
-
-	loadFont("cards.ttf")
+	res = NewResources("./assets")
 
 	cardSlot = make(map[string]sf.Vector2f)
 
@@ -56,6 +45,8 @@ func main() {
 	window := sf.NewRenderWindow(sf.VideoMode{screenWidth, screenHeight, 32}, "Blackjack", sf.StyleDefault, nil)
 	window.SetVerticalSyncEnabled(true)
 	window.SetFramerateLimit(60)
+	focused := false
+	gamemode = 0
 
 	var dt float32
 	dt = 0
@@ -63,8 +54,9 @@ func main() {
 	deck := NewDeck()
 
 	p, c := &Deck{}, &Deck{}
+	pCanDraw, cCanDraw := true, true
 	pTotal, cTotal := []int{0}, []int{0}
-	dispPT, dispCT := sf.NewText("", fonts["cards.ttf"], 24), sf.NewText("", fonts["cards.ttf"], 24)
+	dispPT, dispCT := sf.NewText("", res.fonts["cards.ttf"], 24), sf.NewText("", res.fonts["cards.ttf"], 24)
 	rect := dispPT.GetGlobalBounds()
 	dispPT.SetOrigin(sf.Vector2f{rect.Width / 2, rect.Height / 2})
 	dispPT.SetPosition(sf.Vector2f{screenWidth / 2, screenHeight - 190})
@@ -106,42 +98,69 @@ func main() {
 		}
 	}
 	AddCardP := func(deck *Deck, flip bool) {
-		n := p.AddCard(deck, flip)
-		if n == 1 {
-			l := len(pTotal)
-			for i := 0; i < l; i++ {
-				pTotal[i] += 1
-				pTotal = append(pTotal, pTotal[i]+10)
+		if pCanDraw {
+			pCanDraw = false
+			n := p.AddCard(deck, flip)
+			if n == 1 {
+				l := len(pTotal)
+				for i := 0; i < l; i++ {
+					pTotal[i] += 1
+					pTotal = append(pTotal, pTotal[i]+10)
+				}
+			} else {
+				for i, _ := range pTotal {
+					pTotal[i] += n
+				}
 			}
-		} else {
-			for i, _ := range pTotal {
-				pTotal[i] += n
-			}
+			console.Log("P: ", pTotal)
+			Repos()
+			CalcPT()
+			time.Sleep(time.Second)
+			pCanDraw = true
 		}
-		console.Log("P: ", pTotal)
-		Repos()
-		CalcPT()
+	}
+	DrawCard = func() {
+		go AddCardP(deck, true)
 	}
 	AddCardC := func(deck *Deck, flip bool) {
-		n := c.AddCard(deck, flip)
-		if n == 1 {
-			l := len(cTotal)
-			for i := 0; i < l; i++ {
-				cTotal[i] += 1
-				cTotal = append(cTotal, cTotal[i]+10)
+		if cCanDraw {
+			cCanDraw = false
+			n := c.AddCard(deck, flip)
+			if n == 1 {
+				l := len(cTotal)
+				for i := 0; i < l; i++ {
+					cTotal[i] += 1
+					cTotal = append(cTotal, cTotal[i]+10)
+				}
+			} else {
+				for i, _ := range cTotal {
+					cTotal[i] += n
+				}
 			}
-		} else {
-			for i, _ := range cTotal {
-				cTotal[i] += n
+			console.Log("C: ", cTotal)
+			Repos()
+			CalcCT()
+			time.Sleep(time.Second)
+			if p.Length() == 2 && c.Length() == 2 {
+				for _, v := range cTotal {
+					if v == 21 {
+						console.Log("COMPUTER BLACKJACK")
+						turn = -1
+					}
+				}
+				for _, v := range pTotal {
+					if v == 21 {
+						console.Log("PLAYER BLACKJACK")
+						turn = -1
+					}
+				}
 			}
+			cCanDraw = true
 		}
-		console.Log("C: ", cTotal)
-		Repos()
-		CalcCT()
 	}
 
 	canNewGame := true
-	NewGame := func() {
+	NewGame = func() {
 		if canNewGame {
 			canNewGame = false
 			p, c = &Deck{}, &Deck{}
@@ -149,17 +168,13 @@ func main() {
 			deck = NewDeck()
 			deck.Shuffle()
 			AddCardP(deck, true)
-			time.Sleep(time.Second)
 			AddCardC(deck, false)
-			time.Sleep(time.Second)
 			AddCardP(deck, true)
-			time.Sleep(time.Second)
 			AddCardC(deck, true)
 			turn = 0
 			for _, v := range cTotal {
 				if v == 21 {
 					console.Log("COMPUTER BLACKJACK")
-					(*c)[0].Flip()
 				}
 			}
 			for _, v := range pTotal {
@@ -170,79 +185,161 @@ func main() {
 			canNewGame = true
 		}
 	}
+	PlayerStay = func() {
+		turn = 1
+		(*c)[0].Flip()
+	}
+	setGamemode := func(i int) {
+		gamemode = i
+		if gamemode == 1 {
+			go NewGame()
+		}
+	}
+	StartGame = func() {
+		setGamemode(1)
+	}
+	endGame = func() {
+		time.Sleep(time.Second * 5)
+		setGamemode(0)
+	}
+	ExitGame = func() {
+		if window.IsOpen() {
+			window.Close()
+		}
+	}
+
+	uiInit()
 
 	for window.IsOpen() {
 		delta := time.Now()
 		if event := window.PollEvent(); event != nil {
 			switch event.Type {
-			case sf.EventKeyReleased:
-				go NewGame()
+			case sf.EventGainedFocus:
+				focused = true
+			case sf.EventLostFocus:
+				focused = false
+			// case sf.EventMouseButtonPressed:
+			// 	go NewGame()
 			case sf.EventClosed:
 				window.Close()
 			}
 		}
 
 		window.Clear(sf.Color{45, 165, 75, 255})
-		for _, card := range *deck {
-			window.Draw(card)
-			if card.show {
-				window.Draw(card.dispnum)
-				window.Draw(card.dispsuit)
-			} else {
-			}
-		}
-		for _, card := range *p {
-			window.Draw(card)
-			if card.move {
-				v := card.GetPosition()
-				if v.X == card.targetV.X && v.Y == card.targetV.Y {
-					card.move = false
-				} else {
-					dx, dy := (card.targetV.X-v.X)*dt/10, (card.targetV.Y-v.Y)*dt/10
-					if dx*-5 < 1 && dx*5 < 1 && dy*-5 < 1 && dy*5 < 1 {
-						dx, dy = 0, 0
-						card.SetPosV(card.targetV)
-					} else {
-						card.SetPosV(sf.Vector2f{v.X + dx, v.Y + dy})
+		if gamemode == 1 {
+			if turn == 0 {
+				for i := 0; i < len(pTotal); i++ {
+					if pTotal[i] > 21 {
+						if len(pTotal) > 1 {
+							pTotal = append(pTotal[:i-1], pTotal[i:]...)
+							i--
+							CalcPT()
+						} else {
+							PlayerStay()
+						}
 					}
 				}
 			}
-			if card.show {
-				window.Draw(card.dispnum)
-				window.Draw(card.dispsuit)
-			} else {
+			for _, card := range *deck {
+				window.Draw(card)
+				if card.show {
+					window.Draw(card.dispnum)
+					window.Draw(card.dispsuit)
+				} else {
+				}
+			}
+			for _, card := range *p {
+				window.Draw(card)
+				if card.move {
+					v := card.GetPosition()
+					if v.X == card.targetV.X && v.Y == card.targetV.Y {
+						card.move = false
+					} else {
+						dv := console.Lerp(v, card.targetV, dt/2)
+						if dv.X*-5 < 1 && dv.X*5 < 1 && dv.Y*-5 < 1 && dv.Y*5 < 1 {
+							card.move = false
+							card.SetPosV(card.targetV)
+						} else {
+							card.SetPosV(dv)
+						}
+					}
+				}
+				if card.show {
+					window.Draw(card.dispnum)
+					window.Draw(card.dispsuit)
+				} else {
 
-			}
-		}
-		for _, card := range *c {
-			window.Draw(card)
-			if card.move {
-				v := card.GetPosition()
-				if v.X == card.targetV.X && v.Y == card.targetV.Y {
-					card.move = false
-				} else {
-					dx, dy := (card.targetV.X-v.X)*dt/5, (card.targetV.Y-v.Y)*dt/5
-					if dx*-5 < 1 && dx*5 < 1 && dy*-5 < 1 && dy*5 < 1 {
-						dx, dy = 0, 0
-						card.SetPosV(card.targetV)
-					} else {
-						card.SetPosV(sf.Vector2f{v.X + dx, v.Y + dy})
-					}
 				}
 			}
-			if card.show {
-				window.Draw(card.dispnum)
-				window.Draw(card.dispsuit)
-			} else {
+			for _, card := range *c {
+				window.Draw(card)
+				if card.move {
+					v := card.GetPosition()
+					if v.X == card.targetV.X && v.Y == card.targetV.Y {
+						card.move = false
+					} else {
+						dv := console.Lerp(v, card.targetV, dt/2)
+						if dv.X*-5 < 1 && dv.X*5 < 1 && dv.Y*-5 < 1 && dv.Y*5 < 1 {
+							card.move = false
+							card.SetPosV(card.targetV)
+						} else {
+							card.SetPosV(dv)
+						}
+					}
+				}
+				if card.show {
+					window.Draw(card.dispnum)
+					window.Draw(card.dispsuit)
+				} else {
+				}
+			}
+			window.Draw(dispPT)
+			if turn == 1 {
+				for i := 0; i < len(cTotal); i++ {
+					if cTotal[i] > 21 {
+						if len(cTotal) > 1 {
+							cTotal = append(cTotal[:i-1], cTotal[i:]...)
+							i--
+							CalcCT()
+						} else {
+							turn = -1
+						}
+					}
+				}
+				for cTotal[0] <= 16 {
+					go AddCardC(deck, true)
+				}
+				window.Draw(dispCT)
+				turn = -1
+			} else if turn == -1 {
+				hP := highest21(pTotal)
+				hC := highest21(cTotal)
+				if hP > hC {
+					console.Log("Player Won")
+				} else if hP == hC && hP == 0 {
+					console.Log("All Lose")
+				} else {
+					console.Log("Dealer Won")
+				}
+				time.Sleep(time.Second * 5)
+				gamemode = 0
+				turn = 0
 			}
 		}
-		window.Draw(dispPT)
-		if turn == 1 {
-			window.Draw(dispCT)
-		}
+		uiUpdate(window, focused, gamemode, turn)
 		window.Display()
 		dt = float32(time.Since(delta)) / 10000000
 	}
+}
+
+func highest21(arr []int) int {
+	high := 0
+	for _, v := range arr {
+		if v > high && v <= 21 {
+			high = v
+		}
+	}
+	return high
 }
 
 func generateCardSlots() {
