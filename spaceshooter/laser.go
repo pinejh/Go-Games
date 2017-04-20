@@ -27,6 +27,6 @@ func NewLaser(x, y, angle, speed float32, special bool) {
 	lasers = append(lasers, l)
 }
 
-func (l *Laser) Update() {
-	l.Move(sf.Vector2f{math.Cos(l.angle*math.Pi/180) * l.speed, math.Sin(l.angle*math.Pi/180) * l.speed})
+func (l *Laser) Update(dt float32) {
+	l.Move(sf.Vector2f{math.Cos(l.angle*math.Pi/180) * l.speed * dt, math.Sin(l.angle*math.Pi/180) * l.speed * dt})
 }

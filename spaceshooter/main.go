@@ -4,6 +4,7 @@ import (
 	"runtime"
 	"time"
 
+	console "github.com/pinejh/console"
 	sf "github.com/zyedidia/sfml/v2.3/sfml"
 )
 
@@ -18,10 +19,13 @@ const (
 	shotCooldown = 250 * time.Millisecond
 
 	laserSpeed = 6
+
+	numAsteroids = 6
 )
 
 var res *Resources
 var lasers []*Laser
+var ast []*Asteroid
 var msgmap [][]int
 
 func main() {
@@ -39,6 +43,10 @@ func main() {
 
 	player := NewPlayer(sf.Vector2f{screenWidth / 2, screenHeight / 2})
 
+	for len(ast) < numAsteroids {
+		GenAsteroid()
+	}
+
 	for window.IsOpen() {
 		start := time.Now()
 		if event := window.PollEvent(); event != nil {
@@ -48,6 +56,13 @@ func main() {
 			}
 		}
 
+		for i := 0; i < len(ast); i++ {
+			ast[i].Update(dt)
+			if ast[i].dead {
+				ast = append(ast[:i], ast[i+1:]...)
+				i--
+			}
+		}
 		player.Update(dt)
 		for i := 0; i < len(lasers); i++ {
 			v := lasers[i].GetPosition()
@@ -55,16 +70,41 @@ func main() {
 				lasers = append(lasers[:i], lasers[i+1:]...)
 				i--
 			} else {
-				lasers[i].Update()
+				lasers[i].Update(dt)
 			}
 		}
 
-		window.Clear(sf.ColorWhite)
+		window.Clear(sf.ColorBlack)
 		for _, l := range lasers {
 			window.Draw(l)
 		}
 		window.Draw(player)
+		for _, a := range ast {
+			window.Draw(a)
+		}
 		window.Display()
 		dt = float32(time.Since(start)) / float32(time.Second) * 60
 	}
+}
+
+func Wrap(g *sf.Sprite) {
+	v := g.GetPosition()
+	width := g.GetGlobalBounds().Width
+	height := g.GetGlobalBounds().Height
+	if v.X+width/2 < 0 {
+		g.SetPosition(sf.Vector2f{screenWidth + width/2, v.Y})
+	}
+	if v.X-width/2 > screenWidth {
+		g.SetPosition(sf.Vector2f{-width / 2, v.Y})
+	}
+	if v.Y+height/2 < 0 {
+		g.SetPosition(sf.Vector2f{v.X, screenHeight + height/2})
+	}
+	if v.Y-height/2 > screenHeight {
+		g.SetPosition(sf.Vector2f{v.X, -height / 2})
+	}
+}
+
+func rand(max, min float32) float32 {
+	return float32(console.RandInt(int(max), int(min)))
 }

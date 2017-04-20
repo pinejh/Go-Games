@@ -70,6 +70,7 @@ func (p *Player) Update(dt float32) {
 
 	p.Move(p.vel)
 
+	Wrap(p.Sprite)
 }
 
 func (p *Player) shoot() {
