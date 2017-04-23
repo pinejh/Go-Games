@@ -46,3 +46,12 @@ func (a *Asteroid) Update(dt float32) {
 	a.Move(sf.Vector2f{a.vel.X * dt, a.vel.Y})
 	Wrap(a.Sprite)
 }
+
+func (a *Asteroid) Collides(s *sf.Sprite) bool {
+	apos := a.GetPosition()
+	brect := s.GetGlobalBounds()
+	if apos.Y-a.height/2 < brect.Top+brect.Height && apos.Y+a.height/2 > brect.Top && apos.X-a.width/2 < brect.Left+brect.Width && apos.X+a.width/2 > brect.Left {
+		return true
+	}
+	return false
+}

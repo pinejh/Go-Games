@@ -26,6 +26,7 @@ const (
 var res *Resources
 var lasers []*Laser
 var ast []*Asteroid
+var expl []*Explosion
 var msgmap [][]int
 
 func main() {
@@ -56,13 +57,17 @@ func main() {
 			}
 		}
 
-		for i := 0; i < len(ast); i++ {
-			ast[i].Update(dt)
-			if ast[i].dead {
-				ast = append(ast[:i], ast[i+1:]...)
+		for len(ast) < numAsteroids {
+			GenAsteroid()
+		}
+
+		for i := 0; i < len(expl); i++ {
+			if expl[i].done {
+				expl = append(expl[:i], expl[i+1:]...)
 				i--
 			}
 		}
+
 		player.Update(dt)
 		for i := 0; i < len(lasers); i++ {
 			v := lasers[i].GetPosition()
@@ -74,7 +79,25 @@ func main() {
 			}
 		}
 
+		for i := 0; i < len(ast); i++ {
+			ast[i].Update(dt)
+			for _, l := range lasers {
+				if ast[i].Collides(l.Sprite) {
+					expl = append(expl, NewExplosion(ast[i].GetPosition()))
+					expl[len(expl)-1].Explode()
+					ast[i].dead = true
+				}
+			}
+			if ast[i].dead {
+				ast = append(ast[:i], ast[i+1:]...)
+				i--
+			}
+		}
+
 		window.Clear(sf.ColorBlack)
+		for _, e := range expl {
+			window.Draw(e)
+		}
 		for _, l := range lasers {
 			window.Draw(l)
 		}
@@ -103,6 +126,14 @@ func Wrap(g *sf.Sprite) {
 	if v.Y-height/2 > screenHeight {
 		g.SetPosition(sf.Vector2f{v.X, -height / 2})
 	}
+}
+
+func Collides(a, b *sf.Sprite) bool {
+	arect, brect := a.GetGlobalBounds(), b.GetGlobalBounds()
+	if arect.Top < brect.Top+brect.Height && arect.Top+arect.Height > brect.Top && arect.Left < brect.Left+brect.Width && arect.Left+arect.Width > brect.Left {
+		return true
+	}
+	return false
 }
 
 func rand(max, min float32) float32 {
