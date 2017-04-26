@@ -4,7 +4,6 @@ import (
 	"strconv"
 
 	math "github.com/chewxy/math32"
-	console "github.com/pinejh/console"
 	sf "github.com/zyedidia/sfml/v2.3/sfml"
 )
 
@@ -19,7 +18,7 @@ type Asteroid struct {
 
 func NewAsteroid(pos sf.Vector2f, angle, speed, rotationSpeed float32) *Asteroid {
 	a := new(Asteroid)
-	a.Sprite = sf.NewSprite(res.images["asteroid"+strconv.Itoa(console.RandInt(1, 5))+".png"])
+	a.Sprite = sf.NewSprite(res.images["asteroid"+strconv.Itoa(RandInt(1, 5))+".png"])
 	a.SetPosition(pos)
 	rect := a.GetGlobalBounds()
 	a.width, a.height = rect.Width, rect.Height

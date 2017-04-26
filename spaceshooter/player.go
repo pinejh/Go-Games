@@ -58,12 +58,6 @@ func (p *Player) Update(dt float32) {
 	if sf.KeyboardIsKeyPressed(p.keys[4]) {
 		p.shoot()
 	}
-	if sf.KeyboardIsKeyPressed(sf.KeyN) && sf.KeyboardIsKeyPressed(sf.KeyU) && sf.KeyboardIsKeyPressed(sf.KeyT) {
-		p.msg()
-	}
-	if sf.KeyboardIsKeyPressed(sf.KeyB) && sf.KeyboardIsKeyPressed(sf.KeyU) && sf.KeyboardIsKeyPressed(sf.KeyN) {
-		p.hack()
-	}
 	p.vel.X = math.Cos((p.GetRotation()-90)*math.Pi/180) * p.speed
 	p.vel.Y = math.Sin((p.GetRotation()-90)*math.Pi/180) * p.speed
 

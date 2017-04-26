@@ -1,7 +1,9 @@
 package main
 
 import (
-	console "github.com/pinejh/console"
+	r "math/rand"
+	"time"
+
 	sf "github.com/zyedidia/sfml/v2.3/sfml"
 )
 
@@ -28,6 +30,11 @@ func Collides(a, b *sf.Sprite) bool {
 	return arect.Top < brect.Top+brect.Height && arect.Top+arect.Height > brect.Top && arect.Left < brect.Left+brect.Width && arect.Left+arect.Width > brect.Left
 }
 
+func RandInt(min, max int) int {
+	r.Seed(time.Now().UTC().UnixNano())
+	return r.Intn(max-min) + min
+}
+
 func rand(max, min float32) float32 {
-	return float32(console.RandInt(int(max), int(min)))
+	return float32(RandInt(int(max), int(min)))
 }
