@@ -4,7 +4,6 @@ import (
 	"runtime"
 	"time"
 
-	console "github.com/pinejh/console"
 	sf "github.com/zyedidia/sfml/v2.3/sfml"
 )
 
@@ -27,14 +26,11 @@ var res *Resources
 var lasers []*Laser
 var ast []*Asteroid
 var expl []*Explosion
-var msgmap [][]int
 
 func main() {
 	runtime.LockOSThread()
 
 	res = NewResources()
-
-	msgmap = [][]int{[]int{0, 0, 0, 0, 0, 0, 0}, []int{0, 1, 1, 1, 1, 1, 0}, []int{0, 0, 1, 0, 0, 0, 0}, []int{0, 0, 0, 1, 0, 0, 0}, []int{0, 0, 0, 0, 1, 0, 0}, []int{0, 1, 1, 1, 1, 1, 0}, []int{0, 0, 0, 0, 0, 0, 0}, []int{0, 1, 1, 1, 1, 0, 0}, []int{0, 0, 0, 0, 0, 1, 0}, []int{0, 0, 0, 0, 0, 1, 0}, []int{0, 0, 0, 0, 0, 1, 0}, []int{0, 1, 1, 1, 1, 0, 0}, []int{0, 0, 0, 0, 0, 0, 0}, []int{0, 1, 0, 0, 0, 0, 0}, []int{0, 1, 0, 0, 0, 0, 0}, []int{0, 1, 1, 1, 1, 1, 0}, []int{0, 1, 0, 0, 0, 0, 0}, []int{0, 1, 0, 0, 0, 0, 0}, []int{0, 0, 0, 0, 0, 0, 0}, []int{0, 0, 0, 0, 0, 0, 0}, []int{0, 0, 0, 0, 0, 0, 0}}
 
 	window := sf.NewRenderWindow(sf.VideoMode{screenWidth, screenHeight, 32}, "Spaceshooter", sf.StyleDefault, nil)
 	window.SetVerticalSyncEnabled(true)
@@ -61,36 +57,25 @@ func main() {
 			GenAsteroid()
 		}
 
-		for i := 0; i < len(expl); i++ {
-			if expl[i].done {
-				expl = append(expl[:i], expl[i+1:]...)
-				i--
-			}
-		}
-
 		player.Update(dt)
-		for i := 0; i < len(lasers); i++ {
-			v := lasers[i].GetPosition()
+		for _, l := range lasers {
+			v := l.GetPosition()
 			if v.X < -54 || v.X > screenWidth+54 || v.Y < -54 || v.Y > screenHeight+54 {
-				lasers = append(lasers[:i], lasers[i+1:]...)
-				i--
+				l.dead = true
 			} else {
-				lasers[i].Update(dt)
+				l.Update(dt)
 			}
 		}
 
-		for i := 0; i < len(ast); i++ {
-			ast[i].Update(dt)
+		for _, a := range ast {
+			a.Update(dt)
 			for _, l := range lasers {
-				if ast[i].Collides(l.Sprite) {
-					expl = append(expl, NewExplosion(ast[i].GetPosition()))
-					expl[len(expl)-1].Explode()
-					ast[i].dead = true
+				if a.Collides(l.Sprite) {
+					NewExplosion(a.GetPosition())
+					a.dead = true
+					l.dead = true
+					sf.NewSound(res.sounds["sfx_explosion.wav"]).Play()
 				}
-			}
-			if ast[i].dead {
-				ast = append(ast[:i], ast[i+1:]...)
-				i--
 			}
 		}
 
@@ -106,36 +91,31 @@ func main() {
 			window.Draw(a)
 		}
 		window.Display()
+
+		var tempLasers []*Laser
+		for _, l := range lasers {
+			if !l.dead {
+				tempLasers = append(tempLasers, l)
+			}
+		}
+		lasers = tempLasers
+
+		var tempAst []*Asteroid
+		for _, a := range ast {
+			if !a.dead {
+				tempAst = append(tempAst, a)
+			}
+		}
+		ast = tempAst
+
+		var tempExpl []*Explosion
+		for _, e := range expl {
+			if !e.done {
+				tempExpl = append(tempExpl, e)
+			}
+		}
+		expl = tempExpl
+
 		dt = float32(time.Since(start)) / float32(time.Second) * 60
 	}
-}
-
-func Wrap(g *sf.Sprite) {
-	v := g.GetPosition()
-	width := g.GetGlobalBounds().Width
-	height := g.GetGlobalBounds().Height
-	if v.X+width/2 < 0 {
-		g.SetPosition(sf.Vector2f{screenWidth + width/2, v.Y})
-	}
-	if v.X-width/2 > screenWidth {
-		g.SetPosition(sf.Vector2f{-width / 2, v.Y})
-	}
-	if v.Y+height/2 < 0 {
-		g.SetPosition(sf.Vector2f{v.X, screenHeight + height/2})
-	}
-	if v.Y-height/2 > screenHeight {
-		g.SetPosition(sf.Vector2f{v.X, -height / 2})
-	}
-}
-
-func Collides(a, b *sf.Sprite) bool {
-	arect, brect := a.GetGlobalBounds(), b.GetGlobalBounds()
-	if arect.Top < brect.Top+brect.Height && arect.Top+arect.Height > brect.Top && arect.Left < brect.Left+brect.Width && arect.Left+arect.Width > brect.Left {
-		return true
-	}
-	return false
-}
-
-func rand(max, min float32) float32 {
-	return float32(console.RandInt(int(max), int(min)))
 }

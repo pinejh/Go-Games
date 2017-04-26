@@ -9,6 +9,7 @@ type Laser struct {
 	*sf.Sprite
 	angle float32
 	speed float32
+	dead  bool
 }
 
 func NewLaser(x, y, angle, speed float32, special bool) {
@@ -24,6 +25,7 @@ func NewLaser(x, y, angle, speed float32, special bool) {
 	l.SetRotation(angle)
 	l.angle = angle - 90
 	l.speed = speed
+	l.dead = false
 	lasers = append(lasers, l)
 }
 
