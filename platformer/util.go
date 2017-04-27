@@ -26,40 +26,5 @@ func (c *CircCol) CollidesCirc(c2 *CircCol) bool {
 }
 
 func (c *CircCol) CollidesRect(r sf.Rectf) bool {
-	if c.X > r.Left && c.X < r.Left+r.Width {
-		if c.Y > r.Top && c.Y < r.Top+r.Height {
-			return true
-		}
-		if c.Y < r.Top && distance(c.Vector2f, sf.Vector2f{c.X, r.Top}) < c.radius {
-			return true
-		}
-		if c.Y > r.Top+r.Height && distance(c.Vector2f, sf.Vector2f{c.X, r.Top + r.Height}) < c.radius {
-			return true
-		}
-	}
-	if c.Y > r.Top && c.Y < r.Top+r.Height {
-		if c.X < r.Left && distance(c.Vector2f, sf.Vector2f{r.Left, c.Y}) < c.radius {
-			return true
-		}
-		if c.X > r.Left+r.Width && distance(c.Vector2f, sf.Vector2f{r.Left + r.Width, c.Y}) < c.radius {
-			return true
-		}
-	}
-	if c.X < r.Left {
-		if c.Y < r.Top && distance(c.Vector2f, sf.Vector2f{r.Left, r.Top}) < c.radius {
-			return true
-		}
-		if c.Y > r.Top+r.Height && distance(c.Vector2f, sf.Vector2f{r.Left, r.Top + r.Height}) < c.radius {
-			return true
-		}
-	}
-	if c.X > r.Left+r.Width {
-		if c.Y < r.Top && distance(c.Vector2f, sf.Vector2f{r.Left + r.Width, r.Top}) < c.radius {
-			return true
-		}
-		if c.Y > r.Top+r.Height && distance(c.Vector2f, sf.Vector2f{r.Left + r.Width, r.Top + r.Height}) < c.radius {
-			return true
-		}
-	}
-	return false
+	return (c.X > r.Left && c.X < r.Left+r.Width && (c.Y > r.Top && c.Y < r.Top+r.Height || c.Y < r.Top && distance(c.Vector2f, sf.Vector2f{c.X, r.Top}) < c.radius || c.Y > r.Top+r.Height && distance(c.Vector2f, sf.Vector2f{c.X, r.Top + r.Height}) < c.radius) || c.Y > r.Top && c.Y < r.Top+r.Height && (c.X < r.Left && distance(c.Vector2f, sf.Vector2f{r.Left, c.Y}) < c.radius || c.X > r.Left+r.Width && distance(c.Vector2f, sf.Vector2f{r.Left + r.Width, c.Y}) < c.radius) || c.X < r.Left && (c.Y < r.Top && distance(c.Vector2f, sf.Vector2f{r.Left, r.Top}) < c.radius || c.Y > r.Top+r.Height && distance(c.Vector2f, sf.Vector2f{r.Left, r.Top + r.Height}) < c.radius) || c.X > r.Left+r.Width && (c.Y < r.Top && distance(c.Vector2f, sf.Vector2f{r.Left + r.Width, r.Top}) < c.radius || c.Y > r.Top+r.Height && distance(c.Vector2f, sf.Vector2f{r.Left + r.Width, r.Top + r.Height}) < c.radius))
 }
