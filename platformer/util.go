@@ -28,3 +28,15 @@ func (c *CircCol) CollidesCirc(c2 *CircCol) bool {
 func (c *CircCol) CollidesRect(r sf.Rectf) bool {
 	return (c.X > r.Left && c.X < r.Left+r.Width && (c.Y > r.Top && c.Y < r.Top+r.Height || c.Y < r.Top && distance(c.Vector2f, sf.Vector2f{c.X, r.Top}) < c.radius || c.Y > r.Top+r.Height && distance(c.Vector2f, sf.Vector2f{c.X, r.Top + r.Height}) < c.radius) || c.Y > r.Top && c.Y < r.Top+r.Height && (c.X < r.Left && distance(c.Vector2f, sf.Vector2f{r.Left, c.Y}) < c.radius || c.X > r.Left+r.Width && distance(c.Vector2f, sf.Vector2f{r.Left + r.Width, c.Y}) < c.radius) || c.X < r.Left && (c.Y < r.Top && distance(c.Vector2f, sf.Vector2f{r.Left, r.Top}) < c.radius || c.Y > r.Top+r.Height && distance(c.Vector2f, sf.Vector2f{r.Left, r.Top + r.Height}) < c.radius) || c.X > r.Left+r.Width && (c.Y < r.Top && distance(c.Vector2f, sf.Vector2f{r.Left + r.Width, r.Top}) < c.radius || c.Y > r.Top+r.Height && distance(c.Vector2f, sf.Vector2f{r.Left + r.Width, r.Top + r.Height}) < c.radius))
 }
+
+func (c *CircCol) CollidesPt(v sf.Vector2f) bool {
+	return distance(c.Vector2f, v) < c.radius
+}
+
+func (c *CircCol) CollidesTileTop(t *Tile) (sf.Vector2f, bool) {
+	r := t.GetGlobalBounds()
+	if (c.X > r.Left && c.X < r.Left+r.Width) && ((c.Y > r.Top && c.Y < r.Top+r.Height) || (c.Y < r.Top && distance(c.Vector2f, sf.Vector2f{c.X, r.Top}) < c.radius)) || (c.Y < r.Top && distance(c.Vector2f, sf.Vector2f{r.Left, r.Top}) < c.radius) || (c.Y > r.Left+r.Width && distance(c.Vector2f, sf.Vector2f{r.Left + r.Width, r.Top}) < c.radius) {
+		return sf.Vector2f{0, r.Top - (c.Y + c.radius)}, true
+	}
+	return sf.Vector2f{0, 0}, false
+}
