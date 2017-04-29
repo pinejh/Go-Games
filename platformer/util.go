@@ -5,6 +5,16 @@ import (
 	sf "github.com/zyedidia/sfml/v2.3/sfml"
 )
 
+func clamp(num, min, max float32) float32 {
+	if num < min {
+		return min
+	}
+	if num > max {
+		return max
+	}
+	return num
+}
+
 func distance(a, b sf.Vector2f) float32 {
 	return math.Sqrt((a.X-b.X)*(a.X-b.X) + (a.Y-b.Y)*(a.Y-b.Y))
 }

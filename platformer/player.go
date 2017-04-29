@@ -12,8 +12,8 @@ type Player struct {
 	lives      int
 	crouch     bool
 	invert     bool
-	col        map[string]*CircCol
 	box        map[string]sf.Rectf
+	isMoving   bool
 	isGrounded bool
 	canJump    bool
 	vel        sf.Vector2f
@@ -22,30 +22,37 @@ type Player struct {
 func NewPlayer() *Player {
 	p := new(Player)
 	p.Sprite = sf.NewSprite(res.images["p1_stand.png"])
-	p.SetPosition(sf.Vector2f{screenWidth / 2, screenHeight / 2})
+	p.SetPosition(sf.Vector2f{0, -70})
 	rect := p.GetGlobalBounds()
 	p.SetOrigin(sf.Vector2f{rect.Width / 2, rect.Height})
 	p.lives = 3
 	p.crouch = false
 	p.isGrounded = false
-	p.col = make(map[string]*CircCol)
 	p.box = make(map[string]sf.Rectf)
-	//p.col["feet"] = NewCircCol(sf.Vector2f{p.GetPosition().X, p.GetPosition().Y - 10}, 10)
-	p.box["feet"] = sf.Rectf{p.GetPosition().X - 25, p.GetPosition().Y - 5, 50, 5}
-	//p.col["floor"] = NewCircCol(sf.Vector2f{p.GetPosition().X, p.GetPosition().Y - 10}, 11)
-	p.box["floor"] = sf.Rectf{p.GetPosition().X - 25, p.GetPosition().Y - 5, 50, 7}
+	p.box["feet"] = sf.Rectf{p.GetPosition().X - 20, p.GetPosition().Y - 5, 40, 5}
 	return p
 }
 
 func (p *Player) Update(dt float32) {
-	p.vel.X = 0
-
 	if sf.KeyboardIsKeyPressed(sf.KeyA) && !sf.KeyboardIsKeyPressed(sf.KeyD) {
 		p.Left()
-	}
-	if sf.KeyboardIsKeyPressed(sf.KeyD) && !sf.KeyboardIsKeyPressed(sf.KeyA) {
+	} else if sf.KeyboardIsKeyPressed(sf.KeyD) && !sf.KeyboardIsKeyPressed(sf.KeyA) {
 		p.Right()
+	} else {
+		p.isMoving = false
 	}
+	if !p.isMoving {
+		if p.isGrounded {
+			p.vel.X *= playerDecelG
+		} else {
+			p.vel.X *= playerDecelA
+		}
+	}
+
+	if p.vel.X < .15 && p.vel.X > -.15 {
+		p.vel.X = 0
+	}
+	p.vel.X = clamp(p.vel.X, -playerTopSpeed, playerTopSpeed)
 	if sf.KeyboardIsKeyPressed(sf.KeyS) && !p.crouch {
 		p.Crouch()
 	} else if !sf.KeyboardIsKeyPressed(sf.KeyS) && p.crouch {
@@ -53,26 +60,14 @@ func (p *Player) Update(dt float32) {
 	}
 
 	p.isGrounded = false
-	for _, t := range tiles {
-		c, _ := p.box["floor"].Intersects(t.GetGlobalBounds())
+	for _, t := range level {
+		rect := t.GetGlobalBounds()
+		c, _ := p.box["feet"].Intersects(rect)
 		if c {
 			p.isGrounded = true
-		}
-		c, r := p.box["feet"].Intersects(t.GetGlobalBounds())
-		if c {
 			v := p.GetPosition()
-			p.Move(sf.Vector2f{0, v.Y - (r.Top + r.Height)})
+			p.Move(sf.Vector2f{0, -v.Y + rect.Top})
 		}
-		/*v, c := p.col["feet"].CollidesTileTop(t)
-		if c {
-			p.isGrounded = true
-			p.Move(v)
-			//fmt.Println("grounded")
-		}
-		_, c = p.col["floor"].CollidesTileTop(t)
-		if c {
-			p.isGrounded = true
-		}*/
 	}
 
 	if p.isGrounded && p.vel.Y != 0 {
@@ -82,7 +77,7 @@ func (p *Player) Update(dt float32) {
 	}
 
 	if sf.KeyboardIsKeyPressed(sf.KeyW) {
-		if p.canJump {
+		if p.canJump && p.isGrounded {
 			p.Jump()
 		}
 	}
@@ -90,18 +85,14 @@ func (p *Player) Update(dt float32) {
 		p.canJump = true
 	}
 
-	//fmt.Println(p.vel.X, p.vel.Y)
 	p.Move(sf.Vector2f{p.vel.X * dt, p.vel.Y * dt})
 
 }
 
 func (p *Player) Move(pos sf.Vector2f) {
 	p.Sprite.Move(pos)
-	//p.col["feet"].Vector2f = sf.Vector2f{p.GetPosition().X, p.GetPosition().Y - 10}
 	v := p.GetPosition()
-	p.box["feet"] = sf.Rectf{v.X - 25, v.Y - 5, 50, 5}
-	p.box["floor"] = sf.Rectf{v.X - 25, v.Y - 5, 50, 7}
-
+	p.box["feet"] = sf.Rectf{v.X - 20, v.Y - 5, 40, 5}
 }
 
 func (p *Player) Crouch() {
@@ -124,7 +115,12 @@ func (p *Player) Left() {
 		p.Scale(sf.Vector2f{-1, 1})
 	}
 
-	p.vel.X = -2
+	if !p.crouch {
+		p.isMoving = true
+		p.vel.X -= playerAccel
+	} else {
+		p.isMoving = false
+	}
 }
 
 func (p *Player) Right() {
@@ -133,10 +129,15 @@ func (p *Player) Right() {
 		p.Scale(sf.Vector2f{-1, 1})
 	}
 
-	p.vel.X = 2
+	if !p.crouch {
+		p.isMoving = true
+		p.vel.X += playerAccel
+	} else {
+		p.isMoving = false
+	}
 }
 
 func (p *Player) Jump() {
-	p.vel.Y = -5
+	p.vel.Y = -7.5
 	p.canJump = false
 }
