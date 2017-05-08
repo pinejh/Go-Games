@@ -4,22 +4,25 @@ import (
 	"runtime"
 	"time"
 
+	cm "github.com/vova616/chipmunk"
 	sf "github.com/zyedidia/sfml/v2.3/sfml"
 )
 
 const (
-	screenWidth  = 1280
-	screenHeight = 720
+	screenWidth  = 1260
+	screenHeight = 700
 
 	gravity = .25
 
-	playerTopSpeed = 3
+	playerTopSpeed = 3.75
 	playerAccel    = .35
-	playerDecelG   = .35
-	playerDecelA   = .95
+	playerDecelG   = .55
+	playerDecelA   = .98
+	playerJump     = 8
 )
 
 var res *Resources
+var space *cm.Space
 var levels map[string]LevelMap
 var level []*Tile
 
@@ -34,15 +37,20 @@ func main() {
 	window.SetVerticalSyncEnabled(true)
 	window.SetFramerateLimit(60)
 
+	space := cm.NewSpace()
+
 	loadLevel("level-1")
 
-	player := NewPlayer()
+	p1 := NewPlayer(1, screenWidth/4, screenHeight/2)
+	space.AddBody(p1)
+	p2 := NewPlayer(3, screenWidth*3/4, screenHeight/2)
+	space.AddBody(p2)
 
-	view := sf.NewView()
+	/*view := sf.NewView()
 	view.SetSize(sf.Vector2f{screenWidth, screenHeight})
 	view.SetCenter(player.GetPosition())
 
-	window.SetView(view)
+	window.SetView(view)*/
 
 	var dt float32
 
@@ -55,15 +63,17 @@ func main() {
 			}
 		}
 
-		player.Update(dt)
+		p1.Update(dt)
+		p2.Update(dt)
 
-		view.SetCenter(player.GetPosition())
-		window.SetView(view)
-		window.Clear(sf.ColorWhite)
+		/*view.SetCenter(player.GetPosition())
+		window.SetView(view)*/
+		window.Clear(sf.Color{209, 244, 248, 255})
 		for _, t := range level {
 			window.Draw(t)
 		}
-		window.Draw(player)
+		window.Draw(p1)
+		window.Draw(p2)
 		window.Display()
 
 		dt = float32(time.Since(start)) / float32(time.Second) * 60

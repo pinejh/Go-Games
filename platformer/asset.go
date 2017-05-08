@@ -81,3 +81,22 @@ func (r *Resources) LoadFonts(dir string) {
 		}
 	}
 }
+
+func ParsePlayerSpritesheet() {
+	pTextures = make(map[string]sf.Recti)
+	pTextures["p1_front"] = sf.Recti{0, 196, 66, 92}
+	pTextures["p1_stand"] = sf.Recti{67, 196, 66, 92}
+	pTextures["p1_jump"] = sf.Recti{439, 94, 66, 92}
+	pTextures["p1_crouch"] = sf.Recti{366, 98, 66, 71}
+	pTextures["p1_walk0"] = sf.Recti{3, 2, 66, 92}
+	pTextures["p1_walk1"] = sf.Recti{73 + 3, 2, 66, 92}
+	pTextures["p1_walk2"] = sf.Recti{146 + 3, 2, 66, 92}
+	pTextures["p1_walk3"] = sf.Recti{3, 98 + 2, 66, 92}
+	pTextures["p1_walk4"] = sf.Recti{73 + 3, 98 + 2, 66, 92}
+	pTextures["p1_walk5"] = sf.Recti{146 + 3, 98 + 2, 66, 92}
+	pTextures["p1_walk6"] = sf.Recti{219 + 3, 2, 66, 92}
+	pTextures["p1_walk7"] = sf.Recti{292 + 3, 2, 66, 92}
+	pTextures["p1_walk8"] = sf.Recti{219 + 3, 98 + 2, 66, 92}
+	pTextures["p1_walk9"] = sf.Recti{365 + 3, 2, 66, 92}
+	pTextures["p1_walk10"] = sf.Recti{292 + 3, 98 + 2, 66, 92}
+}
