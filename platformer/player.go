@@ -1,10 +1,10 @@
 package main
 
 import (
-	//"fmt"
 	"strconv"
 	"time"
 
+	//math "github.com/chewxy/math32"
 	cm "github.com/vova616/chipmunk"
 	vect "github.com/vova616/chipmunk/vect"
 	sf "github.com/zyedidia/sfml/v2.3/sfml"
@@ -45,6 +45,21 @@ type Frame struct {
 func NewPlayer(id int, x, y float32) *Player {
 	p := new(Player)
 	ParsePlayerSpritesheet()
+	p.lives = 3
+	p.crouch = false
+	p.isGrounded = false
+	box := cm.NewBox(vect.Vect{0, 35}, 40, 70)
+	box.SetElasticity(0)
+	box.SetFriction(1)
+	p.Body = cm.NewBody(2, box.Moment(2))
+	p.Body.SetPosition(vect.Vect{vect.Float(x), vect.Float(-y)})
+	p.Body.SetAngle(0)
+	p.AddShape(box)
+	p.canJump = true
+	/*p.box = make(map[string]sf.Rectf)
+	p.box["feet"] = sf.Rectf{p.GetPosition().X - 20, p.GetPosition().Y - 5, 40, 5}
+	p.box["left"] = sf.Rectf{p.GetGlobalBounds().Left, p.GetGlobalBounds().Top + p.GetGlobalBounds().Height/4, 5, p.GetGlobalBounds().Height / 2}
+	p.box["right"] = sf.Rectf{p.GetGlobalBounds().Left + p.GetGlobalBounds().Width - 5, p.GetGlobalBounds().Top + p.GetGlobalBounds().Height/4, 5, p.GetGlobalBounds().Height / 2}*/
 	p.Sprite = sf.NewSprite(res.images["p"+strconv.Itoa(id)+"_spritesheet.png"])
 	if id == 1 {
 		p.keyUp = sf.KeyW
@@ -59,17 +74,9 @@ func NewPlayer(id int, x, y float32) *Player {
 		p.keyRight = sf.KeyRight
 	}
 	p.SetTextureRect(pTextures["p1_stand"])
-	p.SetPosition(sf.Vector2f{x, y})
+	p.Sprite.SetPosition(sf.Vector2f{x, y})
 	rect := p.GetGlobalBounds()
 	p.SetOrigin(sf.Vector2f{rect.Width / 2, rect.Height})
-	p.lives = 3
-	p.crouch = false
-	p.isGrounded = false
-	p.Body = cm.NewBody(2, vect.Float{0})
-	p.box = make(map[string]sf.Rectf)
-	p.box["feet"] = sf.Rectf{p.GetPosition().X - 20, p.GetPosition().Y - 5, 40, 5}
-	p.box["left"] = sf.Rectf{p.GetGlobalBounds().Left, p.GetGlobalBounds().Top + p.GetGlobalBounds().Height/4, 5, p.GetGlobalBounds().Height / 2}
-	p.box["right"] = sf.Rectf{p.GetGlobalBounds().Left + p.GetGlobalBounds().Width - 5, p.GetGlobalBounds().Top + p.GetGlobalBounds().Height/4, 5, p.GetGlobalBounds().Height / 2}
 	p.StartAnimTimer()
 	return p
 }
@@ -77,9 +84,10 @@ func NewPlayer(id int, x, y float32) *Player {
 func (p *Player) Update(dt float32) {
 	if sf.KeyboardIsKeyPressed(p.keyLeft) && !sf.KeyboardIsKeyPressed(p.keyRight) {
 		p.Left()
-	} else if sf.KeyboardIsKeyPressed(p.keyRight) && !sf.KeyboardIsKeyPressed(p.keyLeft) {
+	}
+	if sf.KeyboardIsKeyPressed(p.keyRight) && !sf.KeyboardIsKeyPressed(p.keyLeft) {
 		p.Right()
-	} else {
+	} /* else {
 		p.isMoving = false
 	}
 	if !p.isMoving {
@@ -95,7 +103,7 @@ func (p *Player) Update(dt float32) {
 
 	if p.vel.X < .15 && p.vel.X > -.15 {
 		p.vel.X = 0
-	}
+	}*/
 	p.vel.X = clamp(p.vel.X, -playerTopSpeed, playerTopSpeed)
 	if sf.KeyboardIsKeyPressed(p.keyDown) && !p.crouch {
 		p.Crouch()
@@ -103,7 +111,7 @@ func (p *Player) Update(dt float32) {
 		p.Uncrouch()
 	}
 
-	p.isGrounded = false
+	/*p.isGrounded = false
 	p.canMoveL = true
 	p.canMoveR = true
 	for _, t := range level {
@@ -149,33 +157,42 @@ func (p *Player) Update(dt float32) {
 	if !p.canMoveR && p.vel.X != 0 {
 		p.vel.X = 0
 	}
-
+	*/
 	if sf.KeyboardIsKeyPressed(p.keyUp) {
-		if p.canJump && p.isGrounded {
+		if p.canJump /*&& p.isGrounded*/ {
 			p.Jump()
 		}
-	}
-	if !sf.KeyboardIsKeyPressed(p.keyUp) && p.isGrounded {
-		p.canJump = true
-	}
-
+	} /*
+		if !sf.KeyboardIsKeyPressed(p.keyUp) && p.isGrounded {
+			p.canJump = true
+		}
+	*/
 	if p.crouch {
 		p.SetTextureRect(pTextures["p1_crouch"])
 		rect := p.GetGlobalBounds()
 		p.SetOrigin(sf.Vector2f{rect.Width / 2, rect.Height})
 	}
 
-	p.Move(sf.Vector2f{p.vel.X * dt, p.vel.Y * dt})
+	p.UpdatePos()
 
+	//p.Move(sf.Vector2f{p.vel.X * dt, p.vel.Y * dt})
 }
 
 func (p *Player) Move(pos sf.Vector2f) {
 	p.Sprite.Move(pos)
-	v := p.GetPosition()
-	rect := p.GetGlobalBounds()
+	//v := p.GetPosition()
+	/*rect := p.GetGlobalBounds()
 	p.box["feet"] = sf.Rectf{v.X - 20, v.Y - 5, 40, 5}
 	p.box["left"] = sf.Rectf{rect.Left, rect.Top + rect.Height/4, 5, rect.Height / 2}
-	p.box["right"] = sf.Rectf{rect.Left + rect.Width - 5, rect.Top + rect.Height/4, 5, rect.Height / 2}
+	p.box["right"] = sf.Rectf{rect.Left + rect.Width - 5, rect.Top + rect.Height/4, 5, rect.Height / 2}*/
+
+}
+
+func (p *Player) UpdatePos() {
+	p.Body.SetAngle(0)
+	pos := p.Body.Position()
+	p.Sprite.SetPosition(sf.Vector2f{float32(pos.X), float32(-pos.Y)})
+	//fmt.Println(p.Position(), p.GetPosition())
 }
 
 func (p *Player) Crouch() {
@@ -202,7 +219,9 @@ func (p *Player) Left() {
 
 	if !p.crouch {
 		p.isMoving = true
-		p.vel.X -= playerAccel
+		y := float32(p.Velocity().Y)
+		p.Body.AddVelocity(-playerAccel, 0)
+		p.Body.SetVelocity(clamp(float32(p.Velocity().X), -playerTopSpeed, playerTopSpeed), y)
 	} else {
 		p.isMoving = false
 	}
@@ -216,7 +235,9 @@ func (p *Player) Right() {
 
 	if !p.crouch {
 		p.isMoving = true
-		p.vel.X += playerAccel
+		y := float32(p.Velocity().Y)
+		p.Body.AddVelocity(playerAccel, 0)
+		p.Body.SetVelocity(clamp(float32(p.Velocity().X), -playerTopSpeed, playerTopSpeed), y)
 	} else {
 		p.isMoving = false
 	}
@@ -224,7 +245,8 @@ func (p *Player) Right() {
 
 func (p *Player) Jump() {
 	p.StopAnim("walk")
-	p.vel.Y = -playerJump
+	//v := p.Velocity()
+	p.AddVelocity(0, playerJump)
 	p.canJump = false
 	p.QueueFrame(pTextures["p1_jump"], "jump")
 	p.StopAnim("walk")
