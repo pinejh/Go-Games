@@ -51,7 +51,7 @@ func NewPlayer(id int, x, y float32) *Player {
 	box := cm.NewBox(vect.Vect{0, 35}, 40, 70)
 	box.SetElasticity(0)
 	box.SetFriction(1)
-	p.Body = cm.NewBody(2, box.Moment(2))
+	p.Body = cm.NewBody(1, box.Moment(1))
 	p.Body.SetPosition(vect.Vect{vect.Float(x), vect.Float(-y)})
 	p.Body.SetAngle(0)
 	p.AddShape(box)
@@ -158,6 +158,8 @@ func (p *Player) Update(dt float32) {
 		p.vel.X = 0
 	}
 	*/
+	p.canJump = (p.Velocity().Y == 0)
+
 	if sf.KeyboardIsKeyPressed(p.keyUp) {
 		if p.canJump /*&& p.isGrounded*/ {
 			p.Jump()

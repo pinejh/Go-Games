@@ -13,7 +13,7 @@ const (
 	screenWidth  = 1260
 	screenHeight = 700
 
-	gravity = .25
+	gravity = -900
 
 	playerTopSpeed = 300
 	playerAccel    = 15
@@ -40,7 +40,7 @@ func main() {
 	window.SetFramerateLimit(60)
 
 	space = cm.NewSpace()
-	space.Gravity = vect.Vect{0, -450}
+	space.Gravity = vect.Vect{0, gravity}
 
 	loadLevel("level-1")
 
