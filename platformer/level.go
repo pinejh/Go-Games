@@ -2,11 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	//"fmt"
 	"io/ioutil"
 
-	cm "github.com/vova616/chipmunk"
-	vect "github.com/vova616/chipmunk/vect"
 	sf "github.com/zyedidia/sfml/v2.3/sfml"
 )
 
@@ -29,13 +26,9 @@ func preloadLevels() map[string]LevelMap {
 	return m
 }
 
-var staticBody *cm.Body
-
 func loadLevel(name string) {
 	l := [][]string(levels[name])
 	var tiles []*Tile
-	staticBody = cm.NewBodyStatic()
-	static = []*cm.Shape{}
 	for i, n := range l {
 		for z, m := range n {
 			blockName := ""
@@ -66,17 +59,9 @@ func loadLevel(name string) {
 			if m != "0" {
 				x := screenWidth/2 + 35 + ((float32(z) - float32(len(n))/2) * 70)
 				y := screenHeight + 35 - float32(len(l)-i)*70
-				t := NewTile(sf.Vector2f{x, y}, blockName, blockCol)
-				if t.col {
-					static = append(static, cm.NewBox(vect.Vect{vect.Float(x), vect.Float(-y)}, 70, 70))
-				}
-				tiles = append(tiles, t)
+				tiles = append(tiles, NewTile(sf.Vector2f{x, y}, blockName, blockCol))
 			}
 		}
 	}
-	for _, box := range static {
-		staticBody.AddShape(box)
-	}
-	space.AddBody(staticBody)
 	level = tiles
 }
