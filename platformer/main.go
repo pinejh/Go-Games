@@ -20,6 +20,10 @@ const (
 	playerJump     = 8
 )
 
+var (
+	debugCollisions = false
+)
+
 var res *Resources
 var levels map[string]LevelMap
 var level []*Tile
@@ -68,7 +72,14 @@ func main() {
 		}
 		window.Draw(p1)
 		window.Draw(p2)
-		//window.Draw(DrawRect(p1.box["head"]))
+		if debugCollisions {
+			for _, b := range p1.box {
+				window.Draw(DrawRect(b))
+			}
+			for _, b := range p2.box {
+				window.Draw(DrawRect(b))
+			}
+		}
 		window.Display()
 
 		dt = float32(time.Since(start)) / float32(time.Second) * 60

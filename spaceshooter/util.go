@@ -4,6 +4,7 @@ import (
 	r "math/rand"
 	"time"
 
+	math "github.com/chewxy/math32"
 	sf "github.com/zyedidia/sfml/v2.3/sfml"
 )
 
@@ -37,4 +38,8 @@ func RandInt(min, max int) int {
 
 func rand(max, min float32) float32 {
 	return float32(RandInt(int(max), int(min)))
+}
+
+func distance(a, b sf.Vector2f) float32 {
+	return math.Sqrt((a.X-b.X)*(a.X-b.X) + (a.Y-b.Y)*(a.Y-b.Y))
 }

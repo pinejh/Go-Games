@@ -70,11 +70,13 @@ func main() {
 		for _, a := range ast {
 			a.Update(dt)
 			for _, l := range lasers {
-				if a.Collides(l.Sprite) {
-					NewExplosion(a.GetPosition())
-					a.dead = true
-					l.dead = true
-					sf.NewSound(res.sounds["sfx_explosion.wav"]).Play()
+				for _, pt := range l.colPts {
+					if a.CollidesPt(pt) {
+						NewExplosion(a.GetPosition())
+						a.dead = true
+						l.dead = true
+						sf.NewSound(res.sounds["sfx_explosion.wav"]).Play()
+					}
 				}
 			}
 		}

@@ -13,6 +13,7 @@ type Asteroid struct {
 	height        float32
 	rotationSpeed float32
 	vel           sf.Vector2f
+	radius        float32
 	dead          bool
 }
 
@@ -22,6 +23,7 @@ func NewAsteroid(pos sf.Vector2f, angle, speed, rotationSpeed float32) *Asteroid
 	a.SetPosition(pos)
 	rect := a.GetGlobalBounds()
 	a.width, a.height = rect.Width, rect.Height
+	a.radius = (a.width + a.height) / 2 * 3 / 4
 	a.SetOrigin(sf.Vector2f{a.width / 2, a.height / 2})
 	angle = angle * math.Pi / 180
 	a.vel = sf.Vector2f{math.Cos(angle) * speed, math.Sin(angle) * speed}
@@ -53,4 +55,8 @@ func (a *Asteroid) Collides(s *sf.Sprite) bool {
 		return true
 	}
 	return false
+}
+
+func (a *Asteroid) CollidesPt(pt sf.Vector2f) bool {
+	return distance(a.GetPosition(), pt) < a.radius
 }
