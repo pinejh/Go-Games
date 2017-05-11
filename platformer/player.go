@@ -168,7 +168,7 @@ func (p *Player) Update(dt float32) {
 	if p.crouch {
 		p.SetTextureRect(pTextures["p1_crouch"])
 		rect := p.GetGlobalBounds()
-		p.SetOrigin(sf.Vector2f{rect.Width / 2, rect.Height})
+		p.SetOrigin(sf.Vector2f{rect.Width * 2 / 3, rect.Height * 4 / 3})
 	}
 
 	if p.hitHead {
@@ -194,7 +194,7 @@ func (p *Player) Crouch() {
 	p.crouch = true
 	p.SetTextureRect(pTextures["p1_crouch"])
 	rect := p.GetGlobalBounds()
-	p.SetOrigin(sf.Vector2f{rect.Width / 2, rect.Height})
+	p.SetOrigin(sf.Vector2f{rect.Width * 2 / 3, rect.Height * 4 / 3})
 }
 
 func (p *Player) Uncrouch() {
@@ -202,7 +202,7 @@ func (p *Player) Uncrouch() {
 	p.crouch = false
 	p.SetTextureRect(pTextures["p1_stand"])
 	rect := p.GetGlobalBounds()
-	p.SetOrigin(sf.Vector2f{rect.Width / 2, rect.Height})
+	p.SetOrigin(sf.Vector2f{rect.Width * 2 / 3, rect.Height * 4 / 3})
 }
 
 func (p *Player) Left() {

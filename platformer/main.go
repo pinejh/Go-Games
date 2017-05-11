@@ -21,7 +21,7 @@ const (
 )
 
 var (
-	debugCollisions = false
+	debugCollisions = true
 )
 
 var res *Resources
