@@ -50,3 +50,10 @@ func (c *CircCol) CollidesTileTop(t *Tile) (sf.Vector2f, bool) {
 	}
 	return sf.Vector2f{0, 0}, false
 }
+
+func DrawRect(rect sf.Rectf) (r *sf.RectangleShape) {
+	r = sf.NewRectangleShape(sf.Vector2f{rect.Width, rect.Height})
+	r.SetPosition(sf.Vector2f{rect.Left, rect.Top})
+	r.SetFillColor(sf.ColorBlack)
+	return
+}

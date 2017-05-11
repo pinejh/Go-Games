@@ -25,6 +25,7 @@ type Player struct {
 	canMoveR     bool
 	isGrounded   bool
 	canJump      bool
+	hitHead      bool
 	isWalking    bool
 	isAnim       bool
 	animStage    int
@@ -59,13 +60,15 @@ func NewPlayer(id int, x, y float32) *Player {
 	p.SetPosition(sf.Vector2f{x, y})
 	rect := p.GetGlobalBounds()
 	p.SetOrigin(sf.Vector2f{rect.Width / 2, rect.Height})
+	p.SetScale(sf.Vector2f{.75, .75})
 	p.lives = 3
 	p.crouch = false
 	p.isGrounded = false
 	p.box = make(map[string]sf.Rectf)
 	p.box["feet"] = sf.Rectf{p.GetPosition().X - 20, p.GetPosition().Y - 5, 40, 5}
-	p.box["left"] = sf.Rectf{p.GetGlobalBounds().Left, p.GetGlobalBounds().Top + p.GetGlobalBounds().Height/4, 5, p.GetGlobalBounds().Height / 2}
-	p.box["right"] = sf.Rectf{p.GetGlobalBounds().Left + p.GetGlobalBounds().Width - 5, p.GetGlobalBounds().Top + p.GetGlobalBounds().Height/4, 5, p.GetGlobalBounds().Height / 2}
+	p.box["left"] = sf.Rectf{p.GetGlobalBounds().Left, p.GetGlobalBounds().Top + 37, 5, 50}
+	p.box["right"] = sf.Rectf{p.GetGlobalBounds().Left + p.GetGlobalBounds().Width - 5, p.GetGlobalBounds().Top + 37, 5, 50}
+	p.box["head"] = sf.Rectf{p.GetPosition().X - 20, p.GetPosition().Y - 60, 40, 5}
 	p.StartAnimTimer()
 	return p
 }
@@ -99,6 +102,7 @@ func (p *Player) Update(dt float32) {
 		p.Uncrouch()
 	}
 
+	p.hitHead = false
 	p.isGrounded = false
 	p.canMoveL = true
 	p.canMoveR = true
@@ -109,6 +113,12 @@ func (p *Player) Update(dt float32) {
 			p.isGrounded = true
 			v := p.GetPosition()
 			p.Move(sf.Vector2f{0, -v.Y + rect.Top})
+		}
+		c, _ = p.box["head"].Intersects(rect)
+		if c {
+			v := p.GetPosition()
+			p.hitHead = true
+			p.Move(sf.Vector2f{0, -(v.Y - 60) + rect.Top + rect.Height})
 		}
 		c, _ = p.box["left"].Intersects(rect)
 		if c {
@@ -161,6 +171,10 @@ func (p *Player) Update(dt float32) {
 		p.SetOrigin(sf.Vector2f{rect.Width / 2, rect.Height})
 	}
 
+	if p.hitHead {
+		p.vel.Y = 0
+	}
+
 	p.Move(sf.Vector2f{p.vel.X * dt, p.vel.Y * dt})
 
 }
@@ -170,8 +184,9 @@ func (p *Player) Move(pos sf.Vector2f) {
 	v := p.GetPosition()
 	rect := p.GetGlobalBounds()
 	p.box["feet"] = sf.Rectf{v.X - 20, v.Y - 5, 40, 5}
-	p.box["left"] = sf.Rectf{rect.Left, rect.Top + rect.Height/4, 5, rect.Height / 2}
-	p.box["right"] = sf.Rectf{rect.Left + rect.Width - 5, rect.Top + rect.Height/4, 5, rect.Height / 2}
+	p.box["left"] = sf.Rectf{rect.Left, rect.Top + rect.Height - 55, 5, 50}
+	p.box["right"] = sf.Rectf{rect.Left + rect.Width - 5, rect.Top + rect.Height - 55, 5, 50}
+	p.box["head"] = sf.Rectf{v.X - 20, v.Y - 60, 40, 5}
 }
 
 func (p *Player) Crouch() {

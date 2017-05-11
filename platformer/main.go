@@ -68,6 +68,7 @@ func main() {
 		}
 		window.Draw(p1)
 		window.Draw(p2)
+		//window.Draw(DrawRect(p1.box["head"]))
 		window.Display()
 
 		dt = float32(time.Since(start)) / float32(time.Second) * 60
