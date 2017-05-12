@@ -57,3 +57,10 @@ func DrawRect(rect sf.Rectf) (r *sf.RectangleShape) {
 	r.SetFillColor(sf.ColorBlack)
 	return
 }
+
+func NewRectangle(width, height, x, y float32) (r *sf.RectangleShape) {
+	r = sf.NewRectangleShape(sf.Vector2f{width, height})
+	r.SetOrigin(sf.Vector2f{width / 2, height / 2})
+	r.SetPosition(sf.Vector2f{x, y})
+	return
+}

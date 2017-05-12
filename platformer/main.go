@@ -21,7 +21,7 @@ const (
 )
 
 var (
-	debugCollisions = true
+	debugCollisions = false
 )
 
 var res *Resources
@@ -80,6 +80,12 @@ func main() {
 				window.Draw(DrawRect(b))
 			}
 		}
+		window.Draw(p1.healthBar.background)
+		window.Draw(p1.healthBar.bar)
+		window.Draw(p1.healthBar.foreground)
+		window.Draw(p2.healthBar.background)
+		window.Draw(p2.healthBar.bar)
+		window.Draw(p2.healthBar.foreground)
 		window.Display()
 
 		dt = float32(time.Since(start)) / float32(time.Second) * 60

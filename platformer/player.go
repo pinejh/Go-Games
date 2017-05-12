@@ -31,6 +31,9 @@ type Player struct {
 	animStage    int
 	queuedFrames []Frame
 	vel          sf.Vector2f
+
+	health    float32
+	healthBar *HealthBar
 }
 
 var pTextures map[string]sf.Recti
@@ -65,11 +68,15 @@ func NewPlayer(id int, x, y float32) *Player {
 	p.crouch = false
 	p.isGrounded = false
 	p.box = make(map[string]sf.Rectf)
-	p.box["feet"] = sf.Rectf{p.GetPosition().X - 20, p.GetPosition().Y - 5, 40, 5}
-	p.box["left"] = sf.Rectf{p.GetGlobalBounds().Left, p.GetGlobalBounds().Top + 37, 5, 50}
-	p.box["right"] = sf.Rectf{p.GetGlobalBounds().Left + p.GetGlobalBounds().Width - 5, p.GetGlobalBounds().Top + 37, 5, 50}
-	p.box["head"] = sf.Rectf{p.GetPosition().X - 20, p.GetPosition().Y - 60, 40, 5}
+	v := p.GetPosition()
+	rect = p.GetGlobalBounds()
+	p.box["feet"] = sf.Rectf{v.X - 20, v.Y - 5, 40, 5}
+	p.box["left"] = sf.Rectf{rect.Left, rect.Top + rect.Height - 55, 5, 50}
+	p.box["right"] = sf.Rectf{rect.Left + rect.Width - 5, rect.Top + rect.Height - 55, 5, 50}
+	p.box["head"] = sf.Rectf{v.X - 20, v.Y - 60, 40, 5}
 	p.StartAnimTimer()
+	p.health = 100
+	p.healthBar = newHealthBarStd(x, screenHeight-35)
 	return p
 }
 
@@ -144,8 +151,14 @@ func (p *Player) Update(dt float32) {
 
 	if p.isGrounded && p.isMoving {
 		p.Walk()
+		if p.canMoveL && p.canMoveR {
+			p.health += 2
+		} else {
+			p.health -= .75
+		}
 	} else {
 		p.StopAnim("walk")
+		p.health -= .75
 	}
 
 	if !p.canMoveL && p.vel.X != 0 {
@@ -174,6 +187,10 @@ func (p *Player) Update(dt float32) {
 	if p.hitHead {
 		p.vel.Y = 0
 	}
+
+	p.health = clamp(p.health, 0, 100)
+
+	p.healthBar.SetHealth(p.health)
 
 	p.Move(sf.Vector2f{p.vel.X * dt, p.vel.Y * dt})
 
@@ -274,10 +291,12 @@ func (p *Player) QueueFrame(rect sf.Recti, name string) {
 }
 
 func (p *Player) StopAnim(name string) {
-	for i := 0; i < len(p.queuedFrames); i++ {
-		if p.queuedFrames[i].name == name {
-			p.queuedFrames = append(p.queuedFrames[:i], p.queuedFrames[i+1:]...)
-			i--
+	if len(p.queuedFrames) > 0 {
+		for i := 0; i < len(p.queuedFrames); i++ {
+			if p.queuedFrames[i].name == name {
+				p.queuedFrames = append(p.queuedFrames[:i], p.queuedFrames[i+1:]...)
+				i--
+			}
 		}
 	}
 }
