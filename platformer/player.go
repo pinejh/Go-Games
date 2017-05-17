@@ -11,6 +11,8 @@ import (
 type Player struct {
 	*sf.Sprite
 
+	id int
+
 	keyUp    sf.KeyCode
 	keyDown  sf.KeyCode
 	keyLeft  sf.KeyCode
@@ -46,7 +48,8 @@ type Frame struct {
 func NewPlayer(id int, x, y float32) *Player {
 	p := new(Player)
 	ParsePlayerSpritesheet()
-	p.Sprite = sf.NewSprite(res.images["p"+strconv.Itoa(id)+"_spritesheet.png"])
+	p.id = id
+	p.Sprite = sf.NewSprite(res.images["p"+strconv.Itoa(p.id)+"_spritesheet.png"])
 	if id == 1 {
 		p.keyUp = sf.KeyW
 		p.keyDown = sf.KeyS
@@ -77,6 +80,13 @@ func NewPlayer(id int, x, y float32) *Player {
 	p.StartAnimTimer()
 	p.health = 100
 	p.healthBar = newHealthBarStd(x, screenHeight-35)
+	var color sf.Color
+	if id == 1 {
+		color = sf.Color{139, 207, 186, 255}
+	} else {
+		color = sf.Color{243, 155, 183, 255}
+	}
+	p.healthBar.foreground.SetOutlineColor(color)
 	return p
 }
 
@@ -120,12 +130,26 @@ func (p *Player) Update(dt float32) {
 			p.isGrounded = true
 			v := p.GetPosition()
 			p.Move(sf.Vector2f{0, -v.Y + rect.Top})
+			var texture *sf.Texture
+			if p.id == 1 {
+				texture = res.images["hillCaneGreen.png"]
+			} else {
+				texture = res.images["hillCanePink.png"]
+			}
+			t.SetTexture(texture, false)
 		}
 		c, _ = p.box["head"].Intersects(rect)
 		if c {
 			v := p.GetPosition()
 			p.hitHead = true
 			p.Move(sf.Vector2f{0, -(v.Y - 60) + rect.Top + rect.Height})
+			var texture *sf.Texture
+			if p.id == 1 {
+				texture = res.images["hillCaneGreen.png"]
+			} else {
+				texture = res.images["hillCanePink.png"]
+			}
+			t.SetTexture(texture, false)
 		}
 		c, _ = p.box["left"].Intersects(rect)
 		if c {
@@ -133,6 +157,13 @@ func (p *Player) Update(dt float32) {
 			prect := p.GetGlobalBounds()
 			p.Move(sf.Vector2f{-(v.X - prect.Width/2) + (rect.Left + rect.Width), 0})
 			p.canMoveL = false
+			var texture *sf.Texture
+			if p.id == 1 {
+				texture = res.images["hillCaneGreen.png"]
+			} else {
+				texture = res.images["hillCanePink.png"]
+			}
+			t.SetTexture(texture, false)
 		}
 		c, _ = p.box["right"].Intersects(rect)
 		if c {
@@ -140,6 +171,13 @@ func (p *Player) Update(dt float32) {
 			prect := p.GetGlobalBounds()
 			p.Move(sf.Vector2f{-(v.X + prect.Width/2) + rect.Left, 0})
 			p.canMoveR = false
+			var texture *sf.Texture
+			if p.id == 1 {
+				texture = res.images["hillCaneGreen.png"]
+			} else {
+				texture = res.images["hillCanePink.png"]
+			}
+			t.SetTexture(texture, false)
 		}
 	}
 
@@ -152,13 +190,13 @@ func (p *Player) Update(dt float32) {
 	if p.isGrounded && p.isMoving {
 		p.Walk()
 		if p.canMoveL && p.canMoveR {
-			p.health += 2
+			p.health += 1.75
 		} else {
-			p.health -= .75
+			p.health -= .55
 		}
 	} else {
 		p.StopAnim("walk")
-		p.health -= .75
+		p.health -= .55
 	}
 
 	if !p.canMoveL && p.vel.X != 0 {
